@@ -10,21 +10,52 @@ static u8 color = 0xB;
 static u32 row = 0, col = 0;
 
 /**
+ * @brief Scrolls the VGA text screen up by one line.
+ *
+ * Copies each row of text one line up in the VGA buffer,
+ * clears the last row, and adjusts the cursor position to stay
+ * within screen bounds. Called automatically when text reaches
+ * the bottom of the screen.
+ */
+void scroll() {
+    // Move each row up one
+    for (u32 r = 1; r < 25; r++) {
+        for (u32 c = 0; c < 80; c++) {
+            vga[(r - 1) * 80 + c] = vga[r * 80 + c];
+        }
+    }
+
+    // Clear the last row
+    for (u32 c = 0; c < 80; c++) {
+        vga[(24 * 80) + c] = (color << 8) | ' ';
+    }
+
+    // Update cursor position
+    if (row > 0) row--;
+}
+
+/**
  * @brief Outputs a single character to the screen at the current cursor position.
- * Automatically handles newlines and line wrapping.
+ *
+ * Automatically handles newline characters and wraps text at the edge
+ * of the screen. If the cursor moves beyond the last screen row,
+ * the terminal is scrolled up by one line.
  *
  * @param c Character to display
  */
 void putc(char c) {
     if (c == '\n') {
         col = 0;
-        if (++row == 25) row = 0; // Wrap vertically
+        row++;
     } else {
         vga[row * 80 + col++] = (color << 8) | c;
         if (col == 80) {
             col = 0;
-            if (++row == 25) row = 0; // Wrap vertically
+            row++;
         }
+    }
+    if (row == 25) {
+        scroll();
     }
 }
 
@@ -75,18 +106,23 @@ char read_char() {
 }
 
 /**
- * @brief Reads a line of input from the keyboard until ENTER is pressed.
- * The input is echoed to the screen and stored in the provided buffer.
+ * @brief Reads a line of input from the keyboard until ENTER is pressed
+ *        or the buffer is full. Echoes typed characters to the screen.
  *
- * @param buf Pointer to buffer where input line is stored
+ * Input stops when a newline character ('\n') is received or when the buffer
+ * reaches its maximum capacity (max_len - 1), leaving space for the null terminator.
+ * In either case, a newline is printed to the screen.
+ *
+ * @param buf Pointer to the buffer where the input line will be stored.
+ * @param max_len Maximum size of the buffer including space for the null terminator.
  */
-void read_line(char* buf) {
+void read_line(char* buf, int max_len) {
     int i = 0;
 
     while (1) {
         char c = read_char();
 
-        if (c == '\n') {
+        if (c == '\n' || i == max_len - 1) {
             putc('\n');
             break;
         }
@@ -95,7 +131,7 @@ void read_line(char* buf) {
         putc(c);
     }
 
-    buf[i] = 0; // Null-terminate the input string
+    buf[i] = '\0'; // Null-terminate the input string
 }
 
 /**

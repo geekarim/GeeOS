@@ -41,8 +41,8 @@ void kernel_main() {
     char buf[128]; // Buffer to hold user input
 
     while (1) {
-        print("GeeOS>");       // Display shell prompt
-        read_line(buf);         // Read user input
-        run(buf);               // Execute the command
+        print("GeeOS>");                // Display shell prompt
+        read_line(buf, sizeof(buf));    // Read user input
+        run(buf);                       // Execute the command
     }
 }

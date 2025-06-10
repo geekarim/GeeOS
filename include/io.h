@@ -11,10 +11,13 @@ typedef unsigned int   u32; // 32-bit unsigned integer
 // =====================
 
 /**
- * @brief Print a single character to the screen.
- * Handles newline wrapping automatically.
+ * @brief Outputs a single character to the screen at the current cursor position.
  *
- * @param c Character to print
+ * Automatically handles newline characters and wraps text at the edge
+ * of the screen. If the cursor moves beyond the last screen row,
+ * the terminal is scrolled up by one line.
+ *
+ * @param c Character to display
  */
 void putc(char c);
 
@@ -43,12 +46,17 @@ void clrscr();
 char read_char();
 
 /**
- * @brief Read a line of text from the keyboard into the provided buffer.
- * Terminates on ENTER and echoes typed characters to the screen.
+ * @brief Reads a line of input from the keyboard until ENTER is pressed
+ *        or the buffer is full. Echoes typed characters to the screen.
  *
- * @param buf Pointer to a character buffer (must be large enough)
+ * Input stops when a newline character ('\n') is received or when the buffer
+ * reaches its maximum capacity (max_len - 1), leaving space for the null terminator.
+ * In either case, a newline is printed to the screen.
+ *
+ * @param buf Pointer to the buffer where the input line will be stored.
+ * @param max_len Maximum size of the buffer including space for the null terminator.
  */
-void read_line(char* buf);
+void read_line(char* buf, int max_len);
 
 // =====================
 // Port I/O
