@@ -3,9 +3,9 @@
 /**
  * @brief Compare two null-terminated strings for equality.
  *
- * @param a Pointer to the first string
- * @param b Pointer to the second string
- * @return 1 if the strings are equal, 0 otherwise
+ * @param a Pointer to the first string.
+ * @param b Pointer to the second string.
+ * @return 1 if the strings are equal, 0 otherwise.
  */
 int streq(const char* a, const char* b) {
     while (*a && *b) {
@@ -19,7 +19,7 @@ int streq(const char* a, const char* b) {
  * @brief Interpret and execute a command string.
  * Currently supports only the "help, clear" command.
  *
- * @param cmd Pointer to the command string
+ * @param cmd Pointer to the command string.
  */
 void run(const char* cmd) {
     if (streq(cmd, "help")) {

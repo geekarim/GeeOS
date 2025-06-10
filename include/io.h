@@ -17,14 +17,14 @@ typedef unsigned int   u32; // 32-bit unsigned integer
  * of the screen. If the cursor moves beyond the last screen row,
  * the terminal is scrolled up by one line.
  *
- * @param c Character to display
+ * @param c Character to display.
  */
 void putc(char c);
 
 /**
  * @brief Print a null-terminated string to the screen.
  *
- * @param s Pointer to the string to print
+ * @param s Pointer to the string to print.
  */
 void print(const char* s);
 
@@ -38,10 +38,17 @@ void clrscr();
 // =====================
 
 /**
- * @brief Wait for a key press and return the corresponding ASCII character.
- * Only handles a limited US QWERTY layout.
+ * @brief Waits for and returns the next ASCII character input from the keyboard.
  *
- * @return ASCII character of the pressed key
+ * Processes basic US QWERTY layout, including Shift and Caps Lock functionality for
+ * letter case and symbol selection. Ignores key releases and unmapped keys.
+ *
+ * Special handling includes:
+ * - Shift keys (left/right) for uppercase letters and symbols.
+ * - Caps Lock toggle for letter case.
+ * - Ignores non-character scancodes and key release events.
+ *
+ * @return The ASCII character corresponding to the pressed key.
  */
 char read_char();
 
@@ -65,8 +72,8 @@ void read_line(char* buf, int max_len);
 /**
  * @brief Read a byte from an I/O port.
  *
- * @param port The I/O port number
- * @return The byte read from the port
+ * @param port The I/O port number.
+ * @return The byte read from the port.
  */
 u8 inb(u16 port);
 

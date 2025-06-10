@@ -9,6 +9,9 @@ static u8 color = 0xB;
 // Current cursor position
 static u32 row = 0, col = 0;
 
+static int shift_pressed = 0;
+static int caps_lock_on = 0;
+
 /**
  * @brief Scrolls the VGA text screen up by one line.
  *
@@ -17,7 +20,7 @@ static u32 row = 0, col = 0;
  * within screen bounds. Called automatically when text reaches
  * the bottom of the screen.
  */
-void scroll() {
+static void scroll() {
     // Move each row up one
     for (u32 r = 1; r < 25; r++) {
         for (u32 c = 0; c < 80; c++) {
@@ -41,7 +44,7 @@ void scroll() {
  * of the screen. If the cursor moves beyond the last screen row,
  * the terminal is scrolled up by one line.
  *
- * @param c Character to display
+ * @param c Character to display.
  */
 void putc(char c) {
     if (c == '\n') {
@@ -62,7 +65,7 @@ void putc(char c) {
 /**
  * @brief Outputs a null-terminated string to the screen.
  *
- * @param s Pointer to the string to print
+ * @param s Pointer to the string to print.
  */
 void print(const char* s) {
     while (*s) putc(*s++);
@@ -71,8 +74,8 @@ void print(const char* s) {
 /**
  * @brief Reads a single byte from the given I/O port.
  *
- * @param port I/O port to read from
- * @return Byte read from the port
+ * @param port I/O port to read from.
+ * @return Byte read from the port.
  */
 u8 inb(u16 port) {
     u8 r;
@@ -81,27 +84,77 @@ u8 inb(u16 port) {
 }
 
 /**
- * @brief Blocks until a keyboard key is pressed, then returns the mapped ASCII character.
+ * @brief Waits for and returns the next ASCII character input from the keyboard.
  *
- * @return Pressed character (if mapped), otherwise skips unrecognized codes
+ * Processes basic US QWERTY layout, including Shift and Caps Lock functionality for
+ * letter case and symbol selection. Ignores key releases and unmapped keys.
+ *
+ * Special handling includes:
+ * - Shift keys (left/right) for uppercase letters and symbols.
+ * - Caps Lock toggle for letter case.
+ * - Ignores non-character scancodes and key release events.
+ *
+ * @return The ASCII character corresponding to the pressed key.
  */
 char read_char() {
+
+    // US QWERTY mapping
+    static const char keymap[128] = {
+        0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
+        'q','w','e','r','t','y','u','i','o','p','[',']','\n', 0, 'a','s','d','f','g',
+        'h','j','k','l',';', '\'', '`', 0, '\\', 'z','x','c','v','b','n','m',',', '.',
+        '/', 0, '*', 0, ' ', 0
+    };
+
+    static const char shift_keymap[128] = {
+        0, 27, '!','@','#','$','%','^','&','*','(',')','_','+', '\b','\t',
+        'Q','W','E','R','T','Y','U','I','O','P','{','}','\n', 0,
+        'A','S','D','F','G','H','J','K','L',':','"','~', 0, '|',
+        'Z','X','C','V','B','N','M','<','>','?', 0, '*', 0, ' ', 0
+    };
+    
     while (1) {
         // Wait for keyboard buffer to have data
         if ((inb(0x64) & 1) == 0) continue;
 
         u8 code = inb(0x60);
 
-        // Simple US QWERTY mapping for demonstration (keys 2 to 13)
-        static const char keymap[128] = {
-            0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
-            'q','w','e','r','t','y','u','i','o','p','[',']','\n', 0, 'a','s','d','f','g',
-            'h','j','k','l',';', '\'', '`', 0, '\\', 'z','x','c','v','b','n','m',',', '.',
-            '/', 0, '*', 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        };
+        // Handle Shift press (0x2A = left shift, 0x36 = right shift)
+        if (code == 0x2A || code == 0x36) {
+            shift_pressed = 1;
+            continue;
+        }
 
-        if (code < sizeof(keymap))
-            return keymap[code];
+        // Handle Shift release (0xAA = left, 0xB6 = right)
+        if (code == 0xAA || code == 0xB6) {
+            shift_pressed = 0;
+            continue;
+        }
+
+        // Handle Caps Lock (toggle on 0x3A)
+        if (code == 0x3A) {
+            caps_lock_on = !caps_lock_on;
+            continue;
+        }
+
+        // Ignore key releases (high bit set)
+        if (code & 0x80) continue;
+
+        char c = keymap[code]; // Always start from base map
+
+        // If it's a letter, apply Caps Lock and Shift logic
+        if (c >= 'a' && c <= 'z') {
+            if (caps_lock_on ^ shift_pressed) {
+                c = c - ('a' - 'A'); // Convert to uppercase
+            }
+        } else {
+            // For non-letter keys (like 1 -> !), use shift_keymap if Shift is pressed
+            if (shift_pressed) {
+                c = shift_keymap[code];
+            }
+        }
+
+        return c;
     }
 }
 
