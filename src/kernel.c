@@ -1,4 +1,5 @@
 #include "io.h"
+#include "memory.h"
 
 /**
  * @brief Compare two null-terminated strings for equality.
@@ -34,10 +35,16 @@ void run(const char* cmd) {
  * @brief Entry point of the kernel.
  * Initializes the shell loop and handles user input.
  */
-void kernel_main() {
-    clrscr();
+void kernel_main(uint32_t multiboot_info) {
+    clrscr(); // Clear screen
+    // Parse memory map
+    parse_memory_map((uint8_t*) multiboot_info);
+    // Initialize physical memory allocator (sets up page_bitmap, marks used pages)
+    init_physical_allocator();
+    // Setup paging by initializing the page directory
+    setup_paging();
+
     print("Welcome to GeeOS\n");
-    
     char buf[128]; // Buffer to hold user input
 
     while (1) {

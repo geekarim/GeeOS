@@ -7,6 +7,7 @@ start:                  ;The actual entry point after GRUB hands control to the 
 
     mov esp, stack_top  ;Sets up the stack by putting the address of `stack_top` into `ESP`, the stack pointer. This is required because C code (like `kernel_main()`) depends on a working stack for function calls, variables, etc.
 
+    push ebx            ;Push multiboot info pointer as argument to the C function kernel_main.
     call kernel_main    ;Calls the C function kernel_main, which is the real start of the OS logic. After this, the CPU executes the C code.
 
     cli                 ;Clear interrupts — disables them to avoid unexpected behavior after the kernel returns.
@@ -15,6 +16,7 @@ start:                  ;The actual entry point after GRUB hands control to the 
     jmp .hang           ;Infinite loop to stop execution if `kernel_main` ever returns (it shouldn't).
 
 section .bss            ;Reserves uninitialized memory space.
+
 align 16                ;Ensures stack_bottom is 16-byte aligned — good for performance and ABI (Application Binary Interface) compliance.
 stack_bottom:           ;Label marking the end of 16 KiB reserved space.
     resb 16384          ;Reserve 16 KiB (16 × 1024 = 16384 bytes) for the stack. Can be increased if the kernel gets more complex.

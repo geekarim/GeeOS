@@ -1,10 +1,7 @@
 #ifndef IO_H
 #define IO_H
 
-// Type aliases for clarity and portability
-typedef unsigned char  u8;  // 8-bit unsigned integer
-typedef unsigned short u16; // 16-bit unsigned integer
-typedef unsigned int   u32; // 32-bit unsigned integer
+#include "stdint.h"
 
 // =====================
 // Screen Output
@@ -75,6 +72,6 @@ void read_line(char* buf, int max_len);
  * @param port The I/O port number.
  * @return The byte read from the port.
  */
-u8 inb(u16 port);
+uint8_t inb(uint16_t port);
 
 #endif // IO_H

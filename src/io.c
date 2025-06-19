@@ -1,13 +1,13 @@
 #include "io.h"
 
 // VGA (Video Graphics Array) text buffer base address
-static u16* vga = (u16*) 0xB8000;
+static uint16_t* vga = (uint16_t*) 0xB8000;
 
 // Default text color: light cyan (0xB) on black (0x0)
-static u8 color = 0xB;
+static uint8_t color = 0xB;
 
 // Current cursor position
-static u32 row = 0, col = 0;
+static uint32_t row = 0, col = 0;
 
 static int shift_pressed = 0;
 static int caps_lock_on = 0;
@@ -22,14 +22,14 @@ static int caps_lock_on = 0;
  */
 static void scroll() {
     // Move each row up one
-    for (u32 r = 1; r < 25; r++) {
-        for (u32 c = 0; c < 80; c++) {
+    for (uint32_t r = 1; r < 25; r++) {
+        for (uint32_t c = 0; c < 80; c++) {
             vga[(r - 1) * 80 + c] = vga[r * 80 + c];
         }
     }
 
     // Clear the last row
-    for (u32 c = 0; c < 80; c++) {
+    for (uint32_t c = 0; c < 80; c++) {
         vga[(24 * 80) + c] = (color << 8) | ' ';
     }
 
@@ -77,8 +77,8 @@ void print(const char* s) {
  * @param port I/O port to read from.
  * @return Byte read from the port.
  */
-u8 inb(u16 port) {
-    u8 r;
+uint8_t inb(uint16_t port) {
+    uint8_t r;
     __asm__ volatile ("inb %1, %0" : "=a"(r) : "Nd"(port));
     return r;
 }
@@ -117,7 +117,7 @@ char read_char() {
         // Wait for keyboard buffer to have data
         if ((inb(0x64) & 1) == 0) continue;
 
-        u8 code = inb(0x60);
+        uint8_t code = inb(0x60);
 
         // Handle Shift press (0x2A = left shift, 0x36 = right shift)
         if (code == 0x2A || code == 0x36) {
@@ -191,8 +191,8 @@ void read_line(char* buf, int max_len) {
  * @brief Clears the entire VGA text screen and resets the cursor.
  */
 void clrscr() {
-    for (u32 r = 0; r < 25; r++) {
-        for (u32 c = 0; c < 80; c++) {
+    for (uint32_t r = 0; r < 25; r++) {
+        for (uint32_t c = 0; c < 80; c++) {
             vga[r * 80 + c] = (color << 8) | ' ';
         }
     }
